@@ -23,7 +23,7 @@ else:
     print('Vashradande Demble is not what you expect:', response.status_code)
     
 
-# put
+# put (обновление данных)
 payload = {'field1': 'value1', 'field2': 'value2'}
 response = requests.put('http://jsonplaceholder.typicode.com/posts/1', json = payload)
 

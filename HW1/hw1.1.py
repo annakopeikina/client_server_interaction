@@ -1,5 +1,6 @@
 import requests
 import json
+import pandas as pd
 
 # учетные данные API
 client_id = "__"
