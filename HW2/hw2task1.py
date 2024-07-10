@@ -14,7 +14,7 @@ def scrape_books_data():
     
     all_books = []
 
-    # Function to scrape book data from a category page
+
     def scrape_books_in_category(category_url):
         books_data = []
         response = requests.get(category_url, headers=headers)
@@ -27,7 +27,7 @@ def scrape_books_data():
         
         return books_data
 
-    # Function to scrape information from a book's page
+  
     def get_book_info(book_url):
         response = requests.get(book_url, headers=headers)
         soup = BeautifulSoup(response.content, 'html.parser')
@@ -46,7 +46,7 @@ def scrape_books_data():
         
         return book_info
 
-    # Scraping all categories
+ 
     response = requests.get(base_url, headers=headers)
     soup = BeautifulSoup(response.content, 'html.parser')
     categories = soup.find('ul', class_='nav-list').find_all('a')
@@ -56,12 +56,12 @@ def scrape_books_data():
         print(f"Scraping category URL: {category_url}")
         all_books.extend(scrape_books_in_category(category_url))
     
-    # Save data to JSON file
+ 
     with open('books_data.json', 'w', encoding='utf-8') as f:
         json.dump(all_books, f, ensure_ascii=False, indent=4)
     
     print("Data has been scraped and saved to books_data.json")
 
-# Run the scraping function
+
 if __name__ == "__main__":
     scrape_books_data()
