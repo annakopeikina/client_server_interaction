@@ -3,58 +3,70 @@ import requests
 import urllib.parse
 import pandas as pd
 
-url = 'http://books.toscrape.com/catalogue/category/books/'
-response = requests.get(url)
+def scrape_books():
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    }
 
-# Check the status code
-print(f"Status code: {response.status_code}")
+    url = 'http://books.toscrape.com/'
+    response = requests.get(url, headers=headers)
 
-soup = BeautifulSoup(response.content, 'html.parser')
+    print(f"Status code: {response.status_code}")
 
-# Find all links to book categories
-category_links = []
-for link in soup.find_all('a', href=True):
-    category_links.append(urllib.parse.urljoin(url, link['href']))
+    if response.status_code == 200:
+        soup = BeautifulSoup(response.content, 'html.parser')
 
-print(f"Found {len(category_links)} category links.")
+        category_links = []
+        for link in soup.find_all('a', href=True):
+            full_url = urllib.parse.urljoin(url, link['href'])
+            if full_url not in category_links and 'catalogue/category/books/' in full_url:
+                category_links.append(full_url)
 
-# Initialize empty lists to store data
-titles = []
-prices = []
-availability = []
-descriptions = []
+        print(f"Found {len(category_links)} category links.")
 
-# Loop through each category link to scrape book data
-for category_link in category_links:
-    response = requests.get(category_link)
-    soup = BeautifulSoup(response.content, 'html.parser')
-    
-    # Extract data from each book in the category
-    for book in soup.find_all('article', class_='product_pod'):
-        # Title
-        title = book.h3.a['title']
-        titles.append(title)
+        titles = []
+        prices = []
+        availability = []
+        descriptions = []
+
+        for category_link in category_links:
+            response = requests.get(category_link, headers=headers)
+            if response.status_code == 200:
+                soup = BeautifulSoup(response.content, 'html.parser')
+
+                for book in soup.find_all('article', class_='product_pod'):
+                    title = book.h3.a['title']
+                    titles.append(title)
+                    
+                    price_str = book.find('p', class_='price_color').text.strip('Â£')
+                    price = float(price_str[1:]) 
+                    prices.append(price)
+                    
+                    availability_str = book.find('p', class_='instock availability').text.strip()
+                    availability_words = availability_str.split()
+                    if len(availability_words) > 2:
+                        availability_number = int(availability_words[2])
+                    else:
+                        availability_number = 0  
+                    availability.append(availability_number)
+                    
+                    descriptions.append("No description available")
+
+        data = {
+            'Title': titles,
+            'Price': prices,
+            'Availability': availability,
+            'Description': descriptions
+        }
+        df = pd.DataFrame(data)
+
+        print(df)
         
-        # Price
-        price = book.find('p', class_='price_color').text.strip('Â')
-        prices.append(price)
-        
-        # Availability
-        availability_str = book.find('p', class_='instock availability').text.strip()
-        availability.append(int(availability_str.split()[0]))
-        
-        # Description
-        description = book.find('p', class_='').text.strip()
-        descriptions.append(description)
+    df.to_csv('books_data.csv', index=False)
+    print("CSV file created successfully.")
+    if response.status_code != 200:
+        print("Failed to fetch the main page. Please check the URL or your internet connection.")
 
-# Create a DataFrame from the scraped data
-data = {
-    'Title': titles,
-    'Price': prices,
-    'Availability': availability,
-    'Description': descriptions
-}
-df = pd.DataFrame(data)
 
-# Display the DataFrame
-print(df)
+if __name__ == "__main__":
+    scrape_books()
