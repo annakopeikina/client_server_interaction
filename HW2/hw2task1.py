@@ -29,6 +29,7 @@ def scrape_books():
 
         print(f"Found {len(category_links)} category links.")
 
+        categories = []  # Список для хранения названий категорий
         titles = []
         prices = []
         availability = []
@@ -38,6 +39,10 @@ def scrape_books():
             response = requests.get(category_link, headers=headers)
             if response.status_code == 200:
                 soup = BeautifulSoup(response.content, 'html.parser')
+
+                # Получаем название категории
+                category_name = soup.find('h1').text.strip()
+                categories.extend([category_name] * len(soup.find_all('article', class_='product_pod')))
 
                 for book in soup.find_all('article', class_='product_pod'):
                     title = book.h3.a['title']
@@ -58,6 +63,7 @@ def scrape_books():
                     descriptions.append("No description available")
 
         data = {
+            'Category': categories,
             'Title': titles,
             'Price': prices,
             'Availability': availability,
@@ -78,5 +84,3 @@ def scrape_books():
 
 if __name__ == "__main__":
     scrape_books()
-
-    
