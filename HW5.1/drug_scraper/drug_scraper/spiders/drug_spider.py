@@ -132,4 +132,10 @@ class DrugSpiderSpider(scrapy.Spider):
                     'Препарат': drug,
                     'Показания': indications,
                 }
+    def parse(self, response):
+        for row in response.xpath('//xpath-to-table-row'):
+            yield {
+                'Препарат': row.xpath('.//xpath-to-drug/text()').get(),
+                'Показания': row.xpath('.//xpath-to-indication/text()').get()
+            }
 
